@@ -2,115 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Keith Valley Fisher | Global Tour</title>
+    <title>Keith Valley Fisher | Ultimate Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Montserrat', sans-serif; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
-        /* Studio Branding */
         #kv-brand {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.4); font-size: 0.7rem; letter-spacing: 5px;
             font-weight: 900; text-transform: uppercase; pointer-events: none; z-index: 10;
         }
 
-        /* Glassmorphism UI */
         .glass-panel {
             position: absolute; background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px; color: white; padding: 15px 25px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-            z-index: 10; transition: all 0.3s ease;
+            z-index: 10;
         }
 
         #top-hud { top: 20px; left: 20px; display: flex; gap: 40px; }
-        .hud-label { color: rgba(255,255,255,0.5); font-size: 0.6rem; display: block; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
-        .hud-val { color: #facc15; font-weight: 900; font-size: 1.5rem; }
+        .hud-label { color: rgba(255,255,255,0.4); font-size: 0.6rem; display: block; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+        .hud-val { color: #facc15; font-weight: 900; font-size: 1.4rem; }
 
-        #location-hud { top: 20px; right: 20px; text-align: right; border-right: 4px solid #facc15; }
+        #right-hud { top: 20px; right: 20px; text-align: right; border-right: 4px solid #facc15; }
 
-        /* Modal System */
-        #modal-overlay {
+        .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100;
         }
-        #modal-overlay.active { display: flex; }
+        .modal-overlay.active { display: flex; }
 
         .modal {
-            background: rgba(20, 20, 30, 0.95); border: 1px solid rgba(250, 204, 21, 0.5); border-radius: 20px;
-            padding: 40px; width: 600px; max-height: 80vh; overflow-y: auto; text-align: center;
+            background: rgba(15,15,20,0.95); border: 1px solid #facc15; border-radius: 20px;
+            padding: 40px; width: 700px; max-height: 80vh; overflow-y: auto; color: white; text-align: center;
+            display: none; box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
-        h1 { margin: 0 0 20px 0; font-weight: 900; color: #facc15; letter-spacing: -1px; text-transform: uppercase; }
+        h1 { margin: 0 0 20px 0; font-weight: 900; background: linear-gradient(135deg, #facc15, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .card { 
-            background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; 
-            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;
-        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; text-align: left;}
+        .card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
         .card:hover:not(.locked) { background: rgba(250, 204, 21, 0.1); border-color: #facc15; transform: translateY(-3px); }
-        .card.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(100%); }
+        .card.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+
+        .fish-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; text-align: left; }
+        .fish-card { background: #1a1a1a; padding: 15px; border-radius: 10px; border-left: 4px solid #444; }
+        .rarity-epic { border-left-color: #a855f7; color: #a855f7; }
+        .rarity-legendary { border-left-color: #facc15; color: #facc15; }
 
         .btn { 
-            background: #facc15; color: #000; border: none; padding: 12px 25px; 
-            border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase;
-            margin-top: 20px; transition: 0.2s;
+            background: #facc15; color: #000; border: none; padding: 10px 20px; 
+            border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.2s;
         }
-        .btn:hover { transform: scale(1.05); background: #fff; }
+        .btn:hover { background: #fff; transform: scale(1.05); }
 
         #tension-warning {
             position: absolute; top: 25%; left: 50%; transform: translateX(-50%);
             color: #ef4444; font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: 10px; opacity: 0; pointer-events: none;
-            filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)); transition: opacity 0.1s;
+            letter-spacing: 10px; opacity: 0; pointer-events: none; transition: opacity 0.1s;
+            filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8));
+        }
+
+        .controls-bar {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; align-items: center; z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div id="kv-brand">Made for Keith Valley Games</div>
+    <div id="kv-brand">Keith Valley Games</div>
 
     <div id="top-hud" class="glass-panel">
-        <div><span class="hud-label">Total Profit</span><span id="gold-val" class="hud-val">$0</span></div>
-        <div><span class="hud-label">Gear Rating</span><span id="lvl-val" class="hud-val">1.0</span></div>
+        <div><span class="hud-label">Wallet</span><span id="gold-val" class="hud-val">$0</span></div>
+        <div><span class="hud-label">Gear Lvl</span><span id="lvl-val" class="hud-val">1.0</span></div>
     </div>
 
-    <div id="location-hud" class="glass-panel">
-        <span class="hud-label">Current Spot</span>
+    <div id="right-hud" class="glass-panel">
+        <span class="hud-label">Location</span>
         <span id="loc-name" class="hud-val" style="color:#fff">Sunset Creek</span>
     </div>
-    
+
     <div id="tension-warning">Line Strain</div>
 
-    <div id="controls-hint" class="glass-panel" style="bottom:20px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:20px;">
-        <span style="font-weight:700; letter-spacing:1px; color:#ddd;">HOLD [SPACE] TO CAST/REEL</span>
-        <button class="btn" style="margin:0; padding:8px 15px;" onclick="openMap()">[M] MAP</button>
-        <button class="btn" style="margin:0; padding:8px 15px;" onclick="openShop()">[S] SHOP</button>
-    </div>
-
-    <div id="modal-overlay">
-        <div id="shop-modal" class="modal" style="display:none;">
-            <h1>Tackle Upgrades</h1>
+    <div id="modal-overlay" class="modal-overlay">
+        <div id="shop-modal" class="modal">
+            <h1>Tackle Shop</h1>
             <div class="grid">
                 <div class="card" onclick="buyUpgrade('rod')">
-                    <span class="hud-label">Rod Strength</span>
-                    <div id="rod-info" style="color:#fff; font-weight:700;">Wood Rod</div>
+                    <span class="hud-label">Rod Power</span>
+                    <div id="rod-info" style="color:#fff; font-weight:700; font-size:1.2rem;">Wood Rod</div>
                     <div id="rod-cost" style="color:#facc15; margin-top:5px;">$100</div>
                 </div>
                 <div class="card" onclick="buyUpgrade('reel')">
                     <span class="hud-label">Reel Speed</span>
-                    <div id="reel-info" style="color:#fff; font-weight:700;">Old Reel</div>
+                    <div id="reel-info" style="color:#fff; font-weight:700; font-size:1.2rem;">Old Reel</div>
                     <div id="reel-cost" style="color:#facc15; margin-top:5px;">$150</div>
                 </div>
             </div>
-            <button class="btn" style="background:#475569; color:#fff;" onclick="closeModals()">Back to Fishing</button>
+            <button class="btn" style="margin-top:20px;" onclick="closeModals()">Close Shop</button>
         </div>
 
-        <div id="map-modal" class="modal" style="display:none;">
+        <div id="map-modal" class="modal">
             <h1>Global Map</h1>
             <div id="location-grid" class="grid"></div>
-            <button class="btn" style="background:#475569; color:#fff;" onclick="closeModals()">Close Map</button>
+            <button class="btn" style="margin-top:20px;" onclick="closeModals()">Close Map</button>
         </div>
+
+        <div id="log-modal" class="modal">
+            <h1>Angler's Journal</h1>
+            <div style="color:#facc15; font-weight:bold;">Total Fish Caught: <span id="log-count">0</span></div>
+            <div id="fish-list" class="fish-grid"></div>
+            <button class="btn" style="margin-top:20px;" onclick="closeModals()">Close Journal</button>
+        </div>
+    </div>
+
+    <div class="controls-bar glass-panel">
+        <span style="font-weight:900; letter-spacing:1px; margin-right:10px;">[SPACE] FISH</span>
+        <button class="btn" onclick="openMenu('map')">[M] MAP</button>
+        <button class="btn" onclick="openMenu('shop')">[S] SHOP</button>
+        <button class="btn" onclick="openMenu('log')">[L] LOG</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -129,7 +141,7 @@
         { id: 0, name: "Sunset Creek", req: 0, sky: ["#020617", "#fb923c"], water: ["#0f172a", "#1e3a8a"], str: 0.8, payout: 50 },
         { id: 1, name: "Neon Coast", req: 300, sky: ["#2e1065", "#701a75"], water: ["#1e1b4b", "#4c1d95"], str: 1.5, payout: 150 },
         { id: 2, name: "Arctic Shelf", req: 1000, sky: ["#0c4a6e", "#e0f2fe"], water: ["#075985", "#082f49"], str: 2.5, payout: 400 },
-        { id: 3, name: "The Abyss", req: 4000, sky: ["#000000", "#111827"], water: ["#000000", "#020617"], str: 4.0, payout: 1000 }
+        { id: 3, name: "The Abyss", req: 4000, sky: ["#000000", "#111827"], water: ["#000000", "#020617"], str: 4.5, payout: 1000 }
     ];
 
     const UPGRADES = {
@@ -143,90 +155,109 @@
             { name: "Old Reel", cost: 0, spd: 1.0 },
             { name: "Steel Reel", cost: 250, spd: 2.0 },
             { name: "Quantum Reel", cost: 1200, spd: 4.0 },
-            { name: "God-Tier Reel", cost: 4500, spd: 7.0 }
+            { name: "God-Tier", cost: 4500, spd: 7.0 }
         ]
     };
 
-    let gold = 0, rodIdx = 0, reelIdx = 0, loc = LOCATIONS[0];
+    const FISH_DB = [
+        { name: "Minnow", val: 10, rarity: "Common" },
+        { name: "Bass", val: 45, rarity: "Common" },
+        { name: "Trout", val: 80, rarity: "Common" },
+        { name: "Neon Eel", val: 150, rarity: "Epic" },
+        { name: "Frost Shark", val: 350, rarity: "Epic" },
+        { name: "Abyssal Leviathan", val: 1200, rarity: "Legendary" }
+    ];
+
+    let gold = 0, rodIdx = 0, reelIdx = 0, loc = LOCATIONS[0], caughtFish = [];
     let state = "IDLE", tension = 0, progress = 0, rodBend = 0, castPower = 0;
-    let bobberX = 0, bobberY = 0, fishPulling = false, pullTimer = 0, particles = [];
-    
-    // NEW: Cooldown timer to prevent instant recast
-    let castCooldown = 0; 
+    let bobberX = 0, bobberY = 0, fishPulling = false, pullTimer = 0, castCooldown = 0, biteTimeout;
     
     const keys = {};
 
-    // --- INPUT HANDLING ---
+    // --- INPUT ---
     window.addEventListener('keydown', e => {
         keys[e.code] = true;
-        if(e.code === 'Space') e.preventDefault(); 
-
         let isModalOpen = document.getElementById('modal-overlay').classList.contains('active');
+        
+        if (e.code === 'Space') e.preventDefault(); 
+        if (isModalOpen) return;
 
-        if (state === "IDLE" && !isModalOpen) {
-            if (e.code === 'KeyS') openShop();
-            if (e.code === 'KeyM') openMap();
-            // ONLY allow cast if current time is past the cooldown
-            if (e.code === 'Space' && Date.now() > castCooldown) {
-                state = "CASTING";
-            }
+        if (state === "IDLE") {
+            if (e.code === 'KeyS') openMenu('shop');
+            if (e.code === 'KeyM') openMenu('map');
+            if (e.code === 'KeyL') openMenu('log');
+            if (e.code === 'Space' && Date.now() > castCooldown) state = "CASTING";
+        } else if (state === "BITE" && e.code === 'Space') {
+            clearTimeout(biteTimeout);
+            state = "REEL"; tension = 15; progress = 5;
+            fishPulling = false; pullTimer = Date.now() + 1000;
         }
     });
 
     window.addEventListener('keyup', e => {
         keys[e.code] = false;
-        if (state === "CASTING" && e.code === 'Space') {
+        if (e.code === 'Space' && state === "CASTING") {
             state = "WAIT";
             bobberX = canvas.width / 2;
             bobberY = canvas.height * 0.65;
-            createSplash(bobberX, bobberY, 20);
-            setTimeout(() => { if (state === "WAIT") state = "BITE"; }, 1500 + Math.random() * 2500);
+            biteTimeout = setTimeout(() => { 
+                if (state === "WAIT") {
+                    state = "BITE"; 
+                    biteTimeout = setTimeout(() => {
+                        if (state === "BITE") { state = "IDLE"; castCooldown = Date.now() + 1000; }
+                    }, 2000);
+                }
+            }, 1500 + Math.random() * 3000);
         }
     });
 
-    function createSplash(x, y, count) {
-        for(let i=0; i<count; i++) {
-            particles.push({
-                x, y, vx: (Math.random()-0.5)*12, vy: -Math.random()*12, life: 1
+    // --- MENUS ---
+    function openMenu(menu) {
+        document.getElementById('modal-overlay').classList.add('active');
+        document.getElementById('shop-modal').style.display = 'none';
+        document.getElementById('map-modal').style.display = 'none';
+        document.getElementById('log-modal').style.display = 'none';
+        
+        if (menu === 'shop') {
+            document.getElementById('shop-modal').style.display = 'block';
+            updateUI();
+        } else if (menu === 'map') {
+            document.getElementById('map-modal').style.display = 'block';
+            const grid = document.getElementById('location-grid');
+            grid.innerHTML = '';
+            LOCATIONS.forEach(l => {
+                const locked = gold < l.req;
+                const card = document.createElement('div');
+                card.className = `card ${locked ? 'locked' : ''}`;
+                card.innerHTML = `
+                    <div style="font-weight:900; font-size:1.2rem; color:#fff;">${l.name}</div>
+                    <div style="font-size:0.8rem; color:#facc15; margin-top:5px;">
+                        ${locked ? '🔓 Unlock at $'+l.req : '🟢 Travel'}
+                    </div>`;
+                if(!locked) card.onclick = () => { loc = l; document.getElementById('loc-name').innerText = l.name; closeModals(); };
+                grid.appendChild(card);
+            });
+        } else if (menu === 'log') {
+            document.getElementById('log-modal').style.display = 'block';
+            document.getElementById('log-count').innerText = caughtFish.length;
+            const list = document.getElementById('fish-list');
+            list.innerHTML = caughtFish.length ? "" : "<p style='grid-column: span 3;'>No catches yet.</p>";
+            caughtFish.slice().reverse().forEach(f => {
+                list.innerHTML += `
+                    <div class="fish-card rarity-${f.rarity.toLowerCase()}">
+                        <div style="font-size:0.7rem; opacity:0.6">${f.rarity}</div>
+                        <div style="font-weight:900; font-size:1.1rem; margin: 5px 0;">${f.name}</div>
+                        <div style="font-size:0.8rem; color:#aaa;">Value: $${f.val}</div>
+                    </div>`;
             });
         }
-    }
-
-    // --- UI/MENUS ---
-    function openShop() {
-        document.getElementById('modal-overlay').classList.add('active');
-        document.getElementById('shop-modal').style.display = 'block';
-        updateUI();
-    }
-
-    function openMap() {
-        document.getElementById('modal-overlay').classList.add('active');
-        document.getElementById('map-modal').style.display = 'block';
-        const grid = document.getElementById('location-grid');
-        grid.innerHTML = '';
-        LOCATIONS.forEach(l => {
-            const locked = gold < l.req;
-            const card = document.createElement('div');
-            card.className = `card ${locked ? 'locked' : ''}`;
-            card.innerHTML = `
-                <div style="font-weight:900; font-size:1.2rem; color:#fff;">${l.name}</div>
-                <div style="font-size:0.8rem; color:#facc15; margin-top:5px;">
-                    ${locked ? '🔓 Unlock at $'+l.req : '🟢 Travel Available'}
-                </div>
-            `;
-            if(!locked) card.onclick = () => { 
-                loc = l; 
-                document.getElementById('loc-name').innerText = l.name; 
-                closeModals(); 
-            };
-            grid.appendChild(card);
-        });
     }
 
     function closeModals() {
         document.getElementById('modal-overlay').classList.remove('active');
         document.getElementById('shop-modal').style.display = 'none';
         document.getElementById('map-modal').style.display = 'none';
+        document.getElementById('log-modal').style.display = 'none';
         keys['Space'] = false; 
     }
 
@@ -244,78 +275,82 @@
     function updateUI() {
         document.getElementById('gold-val').innerText = `$${gold}`;
         document.getElementById('lvl-val').innerText = (1 + (rodIdx + reelIdx)).toFixed(1);
-        
         document.getElementById('rod-info').innerText = UPGRADES.rod[rodIdx].name;
         document.getElementById('rod-cost').innerText = rodIdx < UPGRADES.rod.length-1 ? `$${UPGRADES.rod[rodIdx+1].cost}` : "MAXED OUT";
-        
         document.getElementById('reel-info').innerText = UPGRADES.reel[reelIdx].name;
         document.getElementById('reel-cost').innerText = reelIdx < UPGRADES.reel.length-1 ? `$${UPGRADES.reel[reelIdx+1].cost}` : "MAXED OUT";
     }
 
-    // --- MAIN GAME LOOP ---
+    // --- MAIN RENDER LOOP ---
     function render() {
         const time = Date.now() / 1000;
         ctx.clearRect(0,0,canvas.width,canvas.height);
 
-        // 1. SKY RENDER
-        let sx = canvas.width/2;
-        let sy = canvas.height*0.5; // Horizon line
-        
-        let sky = ctx.createLinearGradient(0,0,0,canvas.height*0.5);
-        sky.addColorStop(0, loc.sky[0]); 
-        sky.addColorStop(1, loc.sky[1]);
-        ctx.fillStyle = sky; 
-        ctx.fillRect(0,0,canvas.width, canvas.height*0.5);
+        let sx = canvas.width/2, sy = canvas.height*0.5;
 
-        // 2. SUN & GOD RAYS (Hidden if in the Abyss)
+        // 1. SKY
+        let skyGrad = ctx.createLinearGradient(0,0,0,sy);
+        skyGrad.addColorStop(0, loc.sky[0]); skyGrad.addColorStop(1, loc.sky[1]);
+        ctx.fillStyle = skyGrad; ctx.fillRect(0,0,canvas.width,sy);
+
+        // Sun Effect (if not in abyss)
         if (loc.name !== "The Abyss") {
             ctx.globalCompositeOperation = 'screen';
-
-            // Animated Sun Rays pointing UP into the sky
-            for(let i=0; i<6; i++) {
-                let angle = Math.PI + (i * Math.PI/5) + Math.sin(time*0.5 + i)*0.1; 
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                // Draw wide polygons pointing up from the horizon
-                ctx.lineTo(sx + Math.cos(angle - 0.15) * 1500, sy + Math.sin(angle - 0.15) * 1500);
-                ctx.lineTo(sx + Math.cos(angle + 0.15) * 1500, sy + Math.sin(angle + 0.15) * 1500);
-                
-                let rayGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 800);
-                rayGrad.addColorStop(0, "rgba(255,255,255,0.15)");
-                rayGrad.addColorStop(1, "rgba(255,255,255,0)");
-                ctx.fillStyle = rayGrad;
-                ctx.fill();
-            }
-
-            // Glowing Sun Orb on the horizon
-            let sunGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 250);
-            sunGrad.addColorStop(0, "rgba(255, 255, 255, 1)");
-            sunGrad.addColorStop(0.1, loc.sky[1]); // Blends with horizon color
+            let sunGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 300);
+            sunGrad.addColorStop(0, "rgba(255, 220, 150, 0.8)");
+            sunGrad.addColorStop(0.3, loc.sky[1]);
             sunGrad.addColorStop(1, "rgba(0,0,0,0)");
-            
             ctx.fillStyle = sunGrad;
-            ctx.beginPath(); 
-            ctx.arc(sx, sy, 250, 0, Math.PI*2); 
-            ctx.fill();
-            
+            ctx.beginPath(); ctx.arc(sx, sy, 300, 0, Math.PI*2); ctx.fill();
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // 3. WATER RENDER (Drawn OVER the bottom half of the sun for a clean horizon)
-        let wGrad = ctx.createLinearGradient(0, canvas.height*0.5, 0, canvas.height);
-        wGrad.addColorStop(0, loc.water[0]); 
-        wGrad.addColorStop(1, loc.water[1]);
-        ctx.fillStyle = wGrad; 
-        ctx.fillRect(0, canvas.height*0.5, canvas.width, canvas.height*0.5);
+        // 2. REALISTIC WATER ENGINE
+        // Base deep water color
+        let wGrad = ctx.createLinearGradient(0, sy, 0, canvas.height);
+        wGrad.addColorStop(0, loc.water[0]); wGrad.addColorStop(1, loc.water[1]);
+        ctx.fillStyle = wGrad; ctx.fillRect(0, sy, canvas.width, canvas.height/2);
 
-        // 4. GAME LOGIC
-        if (state === "CASTING") castPower = (Math.sin(time*5) + 1) / 2;
-
-        if (state === "BITE" && keys['Space']) {
-            state = "REEL"; 
-            tension = 15; progress = 5; 
-            fishPulling = false; pullTimer = Date.now() + 1000;
+        // Layered Procedural Waves
+        for(let i=0; i<5; i++) {
+            ctx.beginPath();
+            let layerY = sy + (i * canvas.height*0.1);
+            ctx.moveTo(0, layerY);
+            
+            for(let x=0; x<=canvas.width; x+=30) {
+                // Complex wave math: combine two sine waves moving in opposite directions for realistic chaos
+                let wave1 = Math.sin(x * 0.005 + time * (1 + i*0.2)) * (10 + i*4);
+                let wave2 = Math.cos(x * 0.01 - time * (0.8 + i*0.1)) * (5 + i*2);
+                ctx.lineTo(x, layerY + wave1 + wave2);
+            }
+            
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            
+            // Give each wave a gradient (highlight on top, shadow on bottom)
+            let waveGrad = ctx.createLinearGradient(0, layerY-20, 0, canvas.height);
+            waveGrad.addColorStop(0, `rgba(255,255,255,${0.05 + i*0.02})`); // Foam highlight
+            waveGrad.addColorStop(0.1, loc.water[0]);
+            waveGrad.addColorStop(1, loc.water[1]);
+            
+            ctx.fillStyle = waveGrad;
+            ctx.fill();
         }
+
+        // Sun Reflection on Water (Vertical streak)
+        if (loc.name !== "The Abyss") {
+            ctx.globalCompositeOperation = 'screen';
+            let reflection = ctx.createLinearGradient(sx - 150, 0, sx + 150, 0);
+            reflection.addColorStop(0, "rgba(255, 200, 100, 0)");
+            reflection.addColorStop(0.5, "rgba(255, 200, 100, 0.15)");
+            reflection.addColorStop(1, "rgba(255, 200, 100, 0)");
+            ctx.fillStyle = reflection;
+            ctx.fillRect(sx - 150, sy, 300, canvas.height/2);
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // --- GAME LOGIC ---
+        if (state === "CASTING") castPower = (Math.sin(time*6) + 1) / 2;
 
         if (state === "REEL") {
             if(Date.now() > pullTimer) { 
@@ -330,36 +365,31 @@
                 progress += (0.25 * spd);
                 tension += fishPulling ? 1.5 : 0.2;
             } else { 
-                tension -= 2.0; 
-                progress -= 0.05; 
+                tension -= 2.0; progress -= 0.05; 
             }
 
             tension += fishPulling ? (loc.str / pwr) : -0.8;
             tension = Math.max(0, Math.min(100, tension));
             rodBend = lerp(rodBend, tension/100, 0.1);
-            
             document.getElementById('tension-warning').style.opacity = tension > 80 ? 1 : 0;
 
-            // LOSE (Snapped Line)
             if(tension >= 100) { 
-                state = "IDLE"; 
-                castCooldown = Date.now() + 1000; // 1-second cooldown applied
+                state = "IDLE"; castCooldown = Date.now() + 1000; 
                 document.getElementById('tension-warning').style.opacity = 0; 
             }
-            // WIN (Caught Fish)
             if(progress >= 100) { 
-                state = "IDLE"; 
-                castCooldown = Date.now() + 1000; // 1-second cooldown applied
+                state = "IDLE"; castCooldown = Date.now() + 1000; 
                 document.getElementById('tension-warning').style.opacity = 0;
-                gold += Math.floor(loc.payout * (0.8 + Math.random() * 0.4)); 
+                
+                let f = FISH_DB[Math.floor(Math.random() * FISH_DB.length)];
+                let actualVal = Math.floor(f.val * loc.payout/50 * (0.8 + Math.random()*0.4));
+                caughtFish.push({ name: f.name, rarity: f.rarity, val: actualVal });
+                gold += actualVal; 
                 updateUI(); 
-                createSplash(bobberX, bobberY, 30); 
             }
-        } else { 
-            rodBend = lerp(rodBend, state === "CASTING" ? -0.2 : 0, 0.1); 
-        }
+        } else { rodBend = lerp(rodBend, state === "CASTING" ? -0.2 : 0, 0.1); }
 
-        // 5. DRAW ROD & LINE
+        // --- DRAW ROD & LINE ---
         let rTipX = canvas.width/2 + 250 - (rodBend*400);
         let rTipY = canvas.height*0.15 + (rodBend*450);
         if (state === "CASTING") { rTipX += castPower * 150; rTipY -= castPower * 100; }
@@ -373,15 +403,16 @@
             ctx.beginPath(); ctx.moveTo(rTipX, rTipY); 
             ctx.quadraticCurveTo(lerp(rTipX, bobberX, 0.5), lerp(rTipY, bobberY, 0.5) + (1-rodBend)*100, bobberX, bobberY); 
             ctx.stroke();
-            ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(bobberX, bobberY + Math.sin(time*5)*2, 6, 0, 7); ctx.fill();
-            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(bobberX, bobberY-3 + Math.sin(time*5)*2, 3, 0, 7); ctx.fill();
+            
+            // Animated Bobber
+            let bobberFloat = Math.sin(time*4)*3;
+            ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(bobberX, bobberY + bobberFloat, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(bobberX, bobberY-3 + bobberFloat, 3, 0, Math.PI*2); ctx.fill();
         }
 
-        // 6. AAA TENSION UI
+        // --- AAA TENSION UI ---
         if (state === "REEL") {
             let cx = canvas.width/2;
-            
-            // Tension Arc
             ctx.lineWidth = 10; ctx.lineCap = "round";
             ctx.strokeStyle = "rgba(255,255,255,0.1)";
             ctx.beginPath(); ctx.arc(cx, 160, 80, 2.3, 7.1); ctx.stroke();
@@ -389,36 +420,24 @@
             ctx.strokeStyle = tension > 80 ? "#ef4444" : "#facc15";
             ctx.beginPath(); ctx.arc(cx, 160, 80, 2.3, 2.3 + (tension/100)*4.8); ctx.stroke();
             
-            // Text Values inside arc
             ctx.fillStyle = "#fff"; ctx.font = "bold 12px Montserrat"; ctx.textAlign = "center";
             ctx.fillText("TENSION", cx, 150);
             ctx.font = "900 28px Montserrat"; ctx.fillText(Math.floor(tension) + "%", cx, 185);
 
-            // Progress Bar at Bottom
             ctx.fillStyle = "rgba(255,255,255,0.1)"; ctx.fillRect(cx-150, 260, 300, 8);
             ctx.fillStyle = "#38bdf8"; ctx.fillRect(cx-150, 260, (progress/100)*300, 8);
             ctx.fillStyle = "#fff"; ctx.font = "bold 12px Montserrat";
             ctx.fillText("CATCH PROGRESS", cx, 290);
         }
 
-        // 7. STRIKE ALERT
         if (state === "BITE") {
             ctx.fillStyle = "#fff"; ctx.font = "900 4rem Montserrat"; ctx.textAlign = "center";
             ctx.fillText("STRIKE!", canvas.width/2, canvas.height/2);
         }
 
-        // 8. PARTICLES
-        particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.vy += 0.8; p.life -= 0.02;
-            ctx.fillStyle = `rgba(255,255,255,${p.life})`;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 7); ctx.fill();
-            if (p.life <= 0) particles.splice(i, 1);
-        });
-
         requestAnimationFrame(render);
     }
     
-    // Initialize
     updateUI();
     render();
 </script>
